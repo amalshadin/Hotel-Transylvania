@@ -53,7 +53,7 @@ public class LoginController implements ActionListener, KeyListener {
 //        }
 
         if (db.validateLogin(username, password)) {
-            new DashboardUI().setVisible(true);
+            new DashboardUI(username).setVisible(true);
             view.dispose();
         }
         else{
