@@ -26,8 +26,9 @@ public class RegisterController implements ActionListener {
             String username = view.getUsername();
             String password = new String(view.getPassword());
             String name = view.getFullName();
+            String mobile = view.getMobileNo();
             String[] optionSelect = {"OK","NO"};
-            if (db.registerUser(username, password,name)) {
+            if (db.registerUser(username, password, name, mobile)) {
                 int optionSelector = JOptionPane.showOptionDialog(
                         null,
                         "Registration Successful! Continue To Login?",

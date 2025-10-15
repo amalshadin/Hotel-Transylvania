@@ -19,7 +19,7 @@ public class LoginUI extends JFrame {
         this.setSize(new Dimension(1024, 576));
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
-        this.setTitle("Hotel Booking");
+        this.setTitle("Hotel Transylvania");
         this.setLayout(new MigLayout("fill, insets 5", "[40%][60%]", "grow"));
 
         // --- Left Panel for Login ---
