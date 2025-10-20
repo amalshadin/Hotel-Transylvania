@@ -224,4 +224,67 @@ public class DatabaseHelper {
             return false;
         }
     }
+
+    /**
+     * Gets the count of confirmed bookings for a user that are in the future.
+     * @param username The user's username.
+     * @return The count of upcoming bookings.
+     */
+    public int getUpcomingBookingsCount(String username) {
+        String sql = "SELECT COUNT(*) FROM bookings b JOIN users u ON b.user_id = u.id " +
+                "WHERE u.username = ? AND b.check_in_date >= CURRENT_DATE AND b.status = 'Confirmed'";
+        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching upcoming bookings count: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Gets the count of all past bookings for a user.
+     * @param username The user's username.
+     * @return The count of past bookings.
+     */
+    public int getPastBookingsCount(String username) {
+        String sql = "SELECT COUNT(*) FROM bookings b JOIN users u ON b.user_id = u.id " +
+                "WHERE u.username = ? AND b.check_out_date < CURRENT_DATE";
+        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching past bookings count: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Gets a map of currently booked rooms for today, grouped by room type.
+     * @return A Map with room type as key and count of booked rooms as value.
+     */
+    public Map<String, Integer> getBookedRoomsCountForToday() {
+        Map<String, Integer> bookedRooms = new HashMap<>();
+        // This query counts rooms where today's date falls between the check-in and check-out dates
+        String sql = "SELECT room_type, COUNT(*) as count FROM bookings " +
+                "WHERE CURRENT_DATE BETWEEN check_in_date AND check_out_date AND status = 'Confirmed' " +
+                "GROUP BY room_type";
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                bookedRooms.put(rs.getString("room_type"), rs.getInt("count"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching today's booked rooms count: " + e.getMessage());
+        }
+        return bookedRooms;
+    }
 }

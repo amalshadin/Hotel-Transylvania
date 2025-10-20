@@ -35,6 +35,7 @@ public class DashboardUI extends JFrame {
     private final Map<JButton, Icon> defaultIcons = new HashMap<>();
     private final Map<JButton, Icon> selectedIcons = new HashMap<>();
     private final String currentUsername; // Store the username
+     DatabaseHelper dbHelper = new DatabaseHelper();
 
     public DashboardUI(String username) {
         this.currentUsername = username;
@@ -114,25 +115,48 @@ public class DashboardUI extends JFrame {
 
     // --- View display methods ---
 
+    private static final Map<String, Integer> TOTAL_ROOMS = Map.of(
+            "Deluxe AC King", 5,
+            "Executive Suite AC", 3,
+            "Standard AC Queen", 8,
+            "Standard Non-AC", 10,
+            "Economy Twin Non-AC", 6
+    );
+
     private void showDashboard() {
+        // --- 1. Fetch Dynamic Data from Database ---
+        int upcomingStays = dbHelper.getUpcomingBookingsCount(currentUsername);
+        int pastBookings = dbHelper.getPastBookingsCount(currentUsername);
+        Map<String, Integer> bookedToday = dbHelper.getBookedRoomsCountForToday();
+
+        int totalInventory = TOTAL_ROOMS.values().stream().mapToInt(Integer::intValue).sum();
+        int totalBooked = bookedToday.values().stream().mapToInt(Integer::intValue).sum();
+        int roomsAvailable = totalInventory - totalBooked;
+
+
+        // --- 2. Build the UI ---
         mainPanel.removeAll();
         mainPanel.setLayout(new MigLayout("wrap 1, fillx, insets 25", "[grow]"));
+        mainPanel.setBackground(new Color(245, 245, 245)); // Light grey background
 
+        // Welcome Title
         JLabel lblTitle = new JLabel("Welcome back, " + currentUsername + "!");
         lblTitle.setFont(new Font("Arial", Font.BOLD, 28));
         lblTitle.setForeground(Color.BLACK);
         mainPanel.add(lblTitle, "gapbottom 15");
 
+        // KPI Cards Panel
         JPanel kpiPanel = new JPanel(new MigLayout("fillx, insets 0", "[grow, sg][grow, sg][grow, sg]"));
         kpiPanel.setOpaque(false);
-        kpiPanel.add(createKpiCard("Upcoming Stays", "2", new Color(41, 128, 185)), "growx, gapright 20");
-        kpiPanel.add(createKpiCard("Past Bookings", "5", new Color(39, 174, 96)), "growx, gapright 20");
-        kpiPanel.add(createKpiCard("Loyalty Points", "1,250", new Color(243, 156, 18)), "growx");
+        kpiPanel.add(createKpiCard("Rooms Available Today", String.valueOf(roomsAvailable), new Color(39, 174, 96)), "growx, gapright 20");
+        kpiPanel.add(createKpiCard("Upcoming Stays", String.valueOf(upcomingStays), new Color(41, 128, 185)), "growx, gapright 20");
+        kpiPanel.add(createKpiCard("Past Bookings", String.valueOf(pastBookings), new Color(142, 68, 173)), "growx");
         mainPanel.add(kpiPanel, "growx, gapbottom 25");
 
-        mainPanel.add(new JSeparator(), "growx, gapbottom 25");
+        // Room Availability Status Section
+        mainPanel.add(createAvailabilityPanel(bookedToday), "growx, gapbottom 25");
 
-        // Quick Actions section
+        // Quick Actions Section
         JLabel lblActions = new JLabel("Quick Actions");
         lblActions.setFont(new Font("Arial", Font.BOLD, 22));
         mainPanel.add(lblActions, "gapbottom 10");
@@ -144,7 +168,7 @@ public class DashboardUI extends JFrame {
         styleActionButton(btnBookNow);
         styleActionButton(btnViewBookings);
         actionsPanel.add(btnBookNow, "growx, h 45!, gapright 20");
-        actionsPanel.add(btnViewBookings, "growx, h 45!, gapright 20");
+        actionsPanel.add(btnViewBookings, "growx, h 45!");
         mainPanel.add(actionsPanel, "growx");
 
         btnBookNow.addActionListener(e -> showRooms());
@@ -152,6 +176,56 @@ public class DashboardUI extends JFrame {
 
         updateUI();
         highlightNav(btnDashboard);
+    }
+
+    /**
+     * Creates a detailed panel showing the availability of each room type.
+     * @param bookedTodayMap A map of room types to their booked counts for today.
+     * @return A styled JPanel with availability details.
+     */
+    private JPanel createAvailabilityPanel(Map<String, Integer> bookedTodayMap) {
+        JPanel panel = new JPanel(new MigLayout("wrap 2, fillx, insets 20", "[grow 30][grow 70]"));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, new Color(220, 220, 220)));
+
+        JLabel lblSectionTitle = new JLabel("Today's Room Availability");
+        lblSectionTitle.setFont(new Font("Arial", Font.BOLD, 22));
+        panel.add(lblSectionTitle, "span, gapbottom 15");
+
+        // Create a row for each room type defined in our inventory
+        for (Map.Entry<String, Integer> entry : TOTAL_ROOMS.entrySet()) {
+            String roomType = entry.getKey();
+            int totalCount = entry.getValue();
+            int bookedCount = bookedTodayMap.getOrDefault(roomType, 0);
+            int availableCount = totalCount - bookedCount;
+
+            JLabel lblRoomType = new JLabel(roomType);
+            lblRoomType.setFont(new Font("Arial", Font.PLAIN, 14));
+            panel.add(lblRoomType, "growx");
+
+            JPanel statusPanel = new JPanel(new MigLayout("insets 0, fill"));
+            statusPanel.setOpaque(false);
+
+            JLabel lblStatusText = new JLabel(String.format("%d / %d Available", availableCount, totalCount));
+            lblStatusText.setFont(new Font("Arial", Font.BOLD, 14));
+            statusPanel.add(lblStatusText, "split 2, gapright 10, align right");
+
+            // Visual indicator dot
+            JLabel statusIndicator = new JLabel("●");
+            statusIndicator.setFont(new Font("Arial", Font.BOLD, 24));
+            if (availableCount == 0) {
+                statusIndicator.setForeground(new Color(231, 76, 60)); // Red
+            } else if ((double) availableCount / totalCount <= 0.25) { // 25% or less available
+                statusIndicator.setForeground(new Color(243, 156, 18)); // Orange
+            } else {
+                statusIndicator.setForeground(new Color(39, 174, 96)); // Green
+            }
+            statusPanel.add(statusIndicator, "align left");
+
+            panel.add(statusPanel, "growx, wrap");
+        }
+
+        return panel;
     }
 
     private JPanel createKpiCard(String title, String value, Color titleColor) {
