@@ -570,9 +570,6 @@ public class DashboardUI extends JFrame {
     /**
      * NEW: Displays the user profile, settings, and logout button.
      */
-// In DashboardUI.java
-
-    // In DashboardUI.java
 
     private void showProfile() {
         mainPanel.removeAll();
@@ -629,7 +626,6 @@ public class DashboardUI extends JFrame {
         highlightNav(btnProfile);
     }
 
-    // *** CORRECTED HELPER METHOD ***
     private JPanel createTitledCard(String title) {
         // Changed layout to "wrap 1" to stack components vertically
         JPanel card = new JPanel(new MigLayout("wrap 1, fillx", "[grow]"));

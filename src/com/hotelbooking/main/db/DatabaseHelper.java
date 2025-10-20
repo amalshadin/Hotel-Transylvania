@@ -33,11 +33,11 @@ public class DatabaseHelper {
 
         String bookingsSql = "CREATE TABLE IF NOT EXISTS bookings (" +
                 "booking_id SERIAL PRIMARY KEY, " +
-                "user_id INTEGER NOT NULL REFERENCES users(id), " + // Links to the user
+                "user_id INTEGER NOT NULL REFERENCES users(id), " +
                 "room_type TEXT NOT NULL, " +
                 "check_in_date DATE NOT NULL, " +
                 "check_out_date DATE NOT NULL, " +
-                "status TEXT NOT NULL DEFAULT 'Confirmed')"; // e.g., Confirmed, Canceled
+                "status TEXT NOT NULL DEFAULT 'Confirmed')";
         try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
             stmt.execute(bookingsSql);
             System.out.println("✅ Table 'bookings' is ready.");
@@ -48,7 +48,6 @@ public class DatabaseHelper {
 
     }
 
-    // Removed email parameter
     public boolean registerUser(String username, String password, String fullName, String phone) {
         String sql = "INSERT INTO users(username, password, full_name, phone) VALUES(?, ?, ?, ?)";
         try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -134,7 +133,6 @@ public class DatabaseHelper {
         java.sql.Date sqlCheckIn = new java.sql.Date(checkInTime);
         java.sql.Date sqlCheckOut = new java.sql.Date(checkOutTime);
 
-        // FIX: Added "status = 'Confirmed'" to only count active bookings.
         String sql = "SELECT COUNT(*) FROM bookings WHERE room_type = ? AND " +
                 "status = 'Confirmed' AND " +
                 "check_in_date < ? AND check_out_date > ?";
