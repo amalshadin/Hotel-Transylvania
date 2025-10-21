@@ -97,7 +97,7 @@ class InvoiceFrame extends JFrame {
         totalLabel.setFont(new Font("Arial", Font.BOLD, 18));
         panel.add(totalLabel, "span, right, wrap");
 
-        JLabel totalValueLabel = new JLabel(String.format("$%.2f", total));
+        JLabel totalValueLabel = new JLabel(String.format("₹%.2f", total));
         totalValueLabel.setFont(new Font("Arial", Font.BOLD, 22));
         totalValueLabel.setForeground(new Color(0, 128, 0));
         panel.add(totalValueLabel, "span, right, wrap");
