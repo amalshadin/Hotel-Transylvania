@@ -13,6 +13,7 @@ import com.hotelbooking.main.ui.ForgotPassword;
 import com.hotelbooking.main.ui.LoginUI;
 import com.hotelbooking.main.ui.RegisterUI;
 import com.hotelbooking.main.ui.DashboardUI;
+import com.hotelbooking.main.ui.AdminDashboardUI;
 
 
 public class LoginController implements ActionListener, KeyListener {
@@ -37,30 +38,26 @@ public class LoginController implements ActionListener, KeyListener {
     }
 
     public void handleLogin() {
-
         String username = view.getUsername();
         char[] passwordChars = view.getPassword();
-        // Convert char[] to String for validation (do this as late as possible)
         String password = new String(passwordChars);
+        Arrays.fill(passwordChars, '0'); // Clear the password array immediately
 
-        Arrays.fill(passwordChars, '0'); // clear sensitive data
-//        if (Objects.equals(username, "admin") && password.equals("1234")) {
-//            new DashboardUI().setVisible(true);
-//            view.dispose();
-//        }
-//        else{
-//            JOptionPane.showMessageDialog(new JPanel(),"Invalid username or password! Try Again","Incorrect Credentials",JOptionPane.ERROR_MESSAGE);
-//        }
+        // --- ADMIN LOGIN CHECK ---
+        if ("admin@hotel.com".equals(username) && "admin@123".equals(password)) {
+            JOptionPane.showMessageDialog(view, "Admin Login Successful!", "Welcome Admin", JOptionPane.INFORMATION_MESSAGE);
+            new AdminDashboardUI().setVisible(true); // Launch the new admin dashboard
+            view.dispose();
+            return; // Stop further execution
+        }
 
+        // --- REGULAR USER LOGIN ---
         if (db.validateLogin(username, password)) {
             new DashboardUI(username).setVisible(true);
             view.dispose();
-        }
-        else{
+        } else {
             JOptionPane.showMessageDialog(view,"Invalid username or password! Try Again","Login Failed",JOptionPane.ERROR_MESSAGE);
         }
-        password = null;
-
     }
 
     @Override
